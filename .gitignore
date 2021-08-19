@@ -1,0 +1,23 @@
+*#
+
+# Mac organization details
+*.DS_Store*
+
+# Data files
+*data/*
+*dst/*
+*.nc
+*.tif
+*.zip
+
+# Python files/folders
+*.ipynb_checkpoints*
+*.ipynb
+*__pychache__*
+*.pyc
+*.py[c|o]
+
+# Environmental variables
+*.env*
+*credentials*
+.idea
