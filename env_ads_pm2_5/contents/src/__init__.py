@@ -14,8 +14,11 @@ COPERNICUS_ADS_URL = "https://ads.atmosphere.copernicus.eu/api/v2"
 # Copernicus Atmospheric Data Store API KEY
 COPERNICUS_ADS_KEY = os.getenv("COPERNICUS_ADS_KEY")
 
-# Absolute path where the Data will be downloaded to
-DATA_DIR = "/data"
+# script root folder name
+NAME = os.getenv("NAME")
+
+# Data Directory
+DATA_DIR = f"/opt/{NAME}/data"
 
 # Variable we are interested in from Copernicus ADS
 VARIABLE = "particulate_matter_2.5um"
