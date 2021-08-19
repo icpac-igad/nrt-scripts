@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9-slim-buster
 LABEL maintainer="Erick Otenyo <erick.otenyo@igad.int"
 
 # install core libraries
