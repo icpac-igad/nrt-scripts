@@ -1,10 +1,13 @@
 import logging
 import sys
 import os
+import tempfile
 
 import cdsapi
 import urllib3
 import datetime
+import xarray as xr
+from .util_nc import clip_to_ea
 
 urllib3.disable_warnings()
 
@@ -26,6 +29,8 @@ VARIABLE = "particulate_matter_2.5um"
 # are of Interest bbox
 AOI_BBOX = [-12.5, 21, 24, 52]  # IGAD region
 
+EA_SHP_PATH = "shp/gha_admin0.shp"
+
 
 def main():
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -35,7 +40,9 @@ def main():
 
     date_today_str = datetime.date.today().strftime("%Y-%m-%d")
 
-    file_path = f"{DATA_DIR}/{date_today_str}.nc"
+    temp_dir = tempfile.TemporaryDirectory()
+
+    temp_file_path = f"{temp_dir.name}/{date_today_str}.nc"
 
     request = {
         "dataset": "cams-global-atmospheric-composition-forecasts",
@@ -50,4 +57,23 @@ def main():
         }
     }
 
-    client.retrieve(request.get("dataset"), request.get("options"), file_path)
+    client.retrieve(request.get("dataset"), request.get("options"), temp_file_path)
+
+    if os.path.exists(temp_file_path):
+        ds = xr.open_dataset(temp_file_path, decode_times=False)
+        # ads data comes with short data type. try to convert all types to float
+        for var in ds.data_vars:
+            if var != "spatia_ref":
+                ds[var] = ds[var].astype(float)
+                ds[var].attrs['_FillValue'] = -9999.0
+
+        ds.to_netcdf(temp_file_path)
+        ds.close()
+
+        ds = clip_to_ea(temp_file_path, shp_path=EA_SHP_PATH, x_dim='longitude', y_dim='latitude')
+
+        date_today_str = date_today_str.replace("-", '')
+
+        file_path = f"{DATA_DIR}/PM25_{date_today_str}.nc"
+
+        ds.to_netcdf(file_path)

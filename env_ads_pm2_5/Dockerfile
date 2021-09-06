@@ -4,9 +4,11 @@ LABEL maintainer="Erick Otenyo <erick.otenyo@igad.int"
 # install core libraries
 RUN apt-get update && pip install -U pip
 
+# copy requirements.txt
+COPY requirements.txt requirements.txt
+
 # install application libraries
-RUN pip install cdsapi==0.5.1
-RUN pip install urllib3==1.26.6
+RUN pip install -r ./requirements.txt
 
 # set name
 ARG NAME=nrt-script
