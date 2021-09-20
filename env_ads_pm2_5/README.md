@@ -12,7 +12,7 @@ GSKY."}
 Please see the [Python script]({link to Python script on Github}) for more details on this processing.
 
 You can view the processed {EA Hazards Watch public title}
-dataset [on Hazards Watch]({link to dataset's metadata page on Resource Watch}).
+dataset [on Hazards Watch]({link to dataset's metadata page on Hazards Watch}).
 
 You can also download the original dataset [from the source website]({download from source link}).
 

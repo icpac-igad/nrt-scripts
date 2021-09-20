@@ -8,7 +8,7 @@ def clip_to_ea(dataset, shp_path, x_dim="lon", y_dim="lat"):
     # read shapefile
     shp = fiona.open(shp_path)
 
-    # convet first feature to shapely shape
+    # convert first feature to shapely shape
     geom = shape(shp[0]['geometry'])
 
     # open nc file
