@@ -1,11 +1,15 @@
+import codecs
+import hashlib
+import hmac
 import logging
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime
 from glob import glob
-import numpy as np
 
+import numpy as np
 import requests
 import xarray as xr
 
@@ -67,6 +71,9 @@ REMOTE_SSH_KEYPATH = f"/opt/{NAME}/key"
 REMOTE_WEEKLY_DATA_PATH = os.getenv("REMOTE_WEEKLY_DATA_PATH")
 LOCAL_WEEKLY_DATA_PATH = f"/opt/{NAME}/input"
 
+GSKY_WEBHOOK_URL = os.getenv("GSKY_WEBHOOK_URL")
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+
 
 def get_latest_date_for_dataset(gsky_path, namespace):
     res = requests.get(
@@ -98,6 +105,23 @@ def sync_with_remote():
         args.extend([f"--exclude={exclude}"])
     args.extend([REMOTE_WEEKLY_DATA_PATH, f"{LOCAL_WEEKLY_DATA_PATH}/"])
     subprocess.call(args)
+
+
+def send_gsky_ingest_command():
+    if GSKY_WEBHOOK_URL and WEBHOOK_SECRET:
+        logging.info(f"[INGEST COMMAND]: Sending gsky ingest command ")
+        payload = {"now": time.time()}
+        request = requests.Request(
+            'POST', f"{GSKY_WEBHOOK_URL}/ingest-data",
+            data=payload, headers={})
+
+        prepped = request.prepare()
+        signature = hmac.new(codecs.encode(WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
+        prepped.headers['X-Gsky-Signature'] = signature.hexdigest()
+
+        with requests.Session() as session:
+            response = session.send(prepped)
+            logging.info(response.text)
 
 
 def main():
@@ -188,3 +212,7 @@ def main():
                                 logging.info(f'Finished processing derived data for date {latest_gsky_week}')
 
                             ds.close()
+
+        # send command to refresh gsky with the new processed weekly data
+        if len(new_folders) > 0:
+            send_gsky_ingest_command()
