@@ -19,11 +19,11 @@ RUN mkdir -p /opt/$NAME/data
 WORKDIR /opt/$NAME/
 COPY contents/ .
 
+RUN mkdir -p /home/$NAME/.ssh
+
 RUN useradd -r $NAME
 RUN chown -R $NAME:$NAME /opt/$NAME
 VOLUME /opt/$NAME/data
 USER $NAME
-
-RUN mkdir -p /home/$NAME/.ssh
 
 CMD ["python", "main.py"]
