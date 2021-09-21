@@ -24,4 +24,6 @@ RUN chown -R $NAME:$NAME /opt/$NAME
 VOLUME /opt/$NAME/data
 USER $NAME
 
+RUN mkdir -p /home/$NAME/.ssh
+
 CMD ["python", "main.py"]
