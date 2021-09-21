@@ -67,7 +67,7 @@ NAME = os.getenv("NAME")
 # Data Directory
 DATA_DIR = f"/opt/{NAME}/data"
 
-REMOTE_SSH_KEYPATH = f"/opt/{NAME}/key"
+REMOTE_SSH_KEYPATH = os.getenv("REMOTE_SSH_KEYPATH")
 REMOTE_WEEKLY_DATA_PATH = os.getenv("REMOTE_WEEKLY_DATA_PATH")
 LOCAL_WEEKLY_DATA_PATH = f"/opt/{NAME}/input"
 
@@ -98,7 +98,7 @@ def sync_with_remote():
 
     # rsync -av -rsh="ssh -i path/to/key" [--include="files-to-include"] [--exclude="*"] "$from_remote" "$to_local"
 
-    args = ["rsync", "-av", f"--rsh=ssh -i {REMOTE_SSH_KEYPATH}", ]
+    args = ["rsync", "-av", f"--rsh=ssh -i /home/{NAME}/.ssh/{REMOTE_SSH_KEYPATH}", ]
     for include in includes:
         args.extend([f"--include={include}"])
     for exclude in excludes:
