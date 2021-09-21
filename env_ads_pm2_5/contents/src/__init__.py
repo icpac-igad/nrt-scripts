@@ -1,12 +1,18 @@
+import codecs
+import datetime
+import hashlib
+import hmac
 import logging
-import sys
 import os
+import sys
 import tempfile
+import time
 
 import cdsapi
+import requests
 import urllib3
-import datetime
 import xarray as xr
+
 from .util_nc import clip_to_ea
 
 urllib3.disable_warnings()
@@ -30,6 +36,26 @@ VARIABLE = "particulate_matter_2.5um"
 AOI_BBOX = [-12.5, 21, 24, 52]  # IGAD region
 
 EA_SHP_PATH = "shp/gha_admin0.shp"
+
+GSKY_WEBHOOK_URL = os.getenv("GSKY_WEBHOOK_URL")
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+
+
+def send_gsky_ingest_command():
+    if GSKY_WEBHOOK_URL and WEBHOOK_SECRET:
+        logging.info(f"[INGEST COMMAND]: Sending gsky ingest command ")
+        payload = {"now": time.time()}
+        request = requests.Request(
+            'POST', f"{GSKY_WEBHOOK_URL}/ingest-data",
+            data=payload, headers={})
+
+        prepped = request.prepare()
+        signature = hmac.new(codecs.encode(WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
+        prepped.headers['X-Gsky-Signature'] = signature.hexdigest()
+
+        with requests.Session() as session:
+            response = session.send(prepped)
+            logging.info(response.text)
 
 
 def main():
@@ -77,3 +103,5 @@ def main():
         file_path = f"{DATA_DIR}/PM25_{date_today_str}.nc"
 
         ds.to_netcdf(file_path)
+
+        send_gsky_ingest_command()
