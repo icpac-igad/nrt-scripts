@@ -128,7 +128,7 @@ def main():
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     logging.info('STARTING')
 
-    # logging.info('RSYNC')
+    logging.info('RSYNC')
     sync_with_remote()
 
     folders = sorted(glob(f"{LOCAL_WEEKLY_DATA_PATH}/202?????"))
