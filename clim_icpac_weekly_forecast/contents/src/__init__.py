@@ -3,7 +3,6 @@ import hashlib
 import hmac
 import logging
 import os
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -67,8 +66,6 @@ NAME = os.getenv("NAME")
 # Data Directory
 DATA_DIR = f"/opt/{NAME}/data"
 
-REMOTE_SSH_KEYPATH = os.getenv("REMOTE_SSH_KEYPATH")
-REMOTE_WEEKLY_DATA_PATH = os.getenv("REMOTE_WEEKLY_DATA_PATH")
 LOCAL_WEEKLY_DATA_PATH = f"/opt/{NAME}/input"
 
 GSKY_WEBHOOK_URL = os.getenv("GSKY_WEBHOOK_URL")
@@ -88,23 +85,6 @@ def get_weekly_date_from_path(path):
     date_str = path[-8:]
     date = datetime.strptime(date_str, '%Y%m%d')
     return date, date_str
-
-
-def sync_with_remote():
-    excludes = ["*"]
-
-    # include only what we need for weekly
-    includes = ["20??????/", "maps/", "PrecDaily.nc", "TavgDaily.nc", "PrecExtreme.nc"]
-
-    # rsync -av -rsh="ssh -i path/to/key" [--include="files-to-include"] [--exclude="*"] "$from_remote" "$to_local"
-
-    args = ["rsync", "-av", f"--rsh=ssh -i /home/{NAME}/.ssh/{REMOTE_SSH_KEYPATH}", ]
-    for include in includes:
-        args.extend([f"--include={include}"])
-    for exclude in excludes:
-        args.extend([f"--exclude={exclude}"])
-    args.extend([REMOTE_WEEKLY_DATA_PATH, f"{LOCAL_WEEKLY_DATA_PATH}/"])
-    subprocess.call(args)
 
 
 def send_gsky_ingest_command():
@@ -128,15 +108,12 @@ def main():
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     logging.info('STARTING')
 
-    logging.info('RSYNC')
-    sync_with_remote()
-
     folders = sorted(glob(f"{LOCAL_WEEKLY_DATA_PATH}/202?????"))
 
-    logging.info('Getting latest date..')
+    logging.info('Getting latest date from GSKY ...')
     latest_gsky_week = get_latest_date_for_dataset("gdata/RAINFALL/WEEKLY", "weeklytotalrain")
 
-    logging.info(f'Found latest date. {latest_gsky_week}')
+    logging.info(f'Latest ingested date from GSKY is: {latest_gsky_week}')
 
     if latest_gsky_week:
         latest_gsky_week = latest_gsky_week[:10]
@@ -150,7 +127,7 @@ def main():
             if folder_date > latest_gsky_week:
                 new_folders.append({"date": folder_date, "dir": folder, 'date_str': date_str})
 
-        logging.info(f'Pulled new {len(new_folders)} folders')
+        logging.info(f'Total number of folders with new data: {len(new_folders)}')
 
         for folder in new_folders:
             logging.info(f'Processing data for date {latest_gsky_week}')
@@ -213,6 +190,8 @@ def main():
 
                             ds.close()
 
-        # send command to refresh gsky with the new processed weekly data
+        logging.info(f'Finished processing')
+
         if len(new_folders) > 0:
+            logging.info(f'Sending Ingest command to GSKY')
             send_gsky_ingest_command()
