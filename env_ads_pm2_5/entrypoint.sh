@@ -2,13 +2,13 @@
 set -xeu
 
 # If "-e uid={custom/local user id}" flag is not set for "docker run" command, use 9999 as default
-CURRENT_UID=${UID:-9999}
+CURR_UID=${CURRENT_UID:-9999}
 
 # Notify user about the UID selected
-echo "Current UID : $CURRENT_UID"
+echo "Current UID : $CURR_UID"
 
 # Create user  with selected UID
-useradd --shell /bin/bash -u "$CURRENT_UID" -o -c "" -m "$NAME"
+useradd --shell /bin/bash -u "$CURR_UID" -o -c "" -m "$NAME"
 
 # Set "HOME" ENV variable for user's home directory
 export HOME=/home/"$NAME"
