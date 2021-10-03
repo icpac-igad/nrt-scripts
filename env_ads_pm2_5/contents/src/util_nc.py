@@ -15,7 +15,7 @@ def clip_to_ea(dataset, shp_path, x_dim="lon", y_dim="lat"):
     ds = rxr.open_rasterio(dataset, decode_times=False)
 
     # set spatial dimensions
-    ds.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim, inplace=True)
+    # ds.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim, inplace=True)
 
     # write crs
     ds = ds.rio.write_crs("epsg:4326", inplace=True)
