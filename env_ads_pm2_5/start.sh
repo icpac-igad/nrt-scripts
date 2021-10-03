@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -xeu
+
 #Change the NAME variable with the name of your script
 NAME=$(basename $(pwd))
 LOG=${LOG:-udp://localhost}
