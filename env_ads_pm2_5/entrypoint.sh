@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -xeu
 
 # If "-e uid={custom/local user id}" flag is not set for "docker run" command, use 9999 as default
