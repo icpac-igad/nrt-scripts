@@ -10,4 +10,4 @@ HOST_DATA_VOL=${PM25_DATA_VOL:-}
 docker build -t "$NAME" --build-arg NAME="$NAME" .
 
 docker run -v "$HOST_DATA_VOL":/opt/"$NAME"/data -v "$HOST_DATA_VOL":/opt/"$NAME"/data --log-driver=syslog \
-  --log-opt syslog-address="$LOG" --log-opt tag="$NAME" --env-file .env --rm "$NAME" python main.py
+  --log-opt syslog-address="$LOG" --log-opt tag="$NAME" -e CURRENT_UID="$CURRENT_UID" --env-file .env --rm "$NAME" python main.py
