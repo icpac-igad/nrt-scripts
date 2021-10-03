@@ -30,4 +30,16 @@ def clip_to_ea(dataset, shp_path, x_dim="lon", y_dim="lat"):
     # clip to shape
     ds = ds.rio.clip([geom], 'epsg:4326', drop=True)
 
+    # for some reason yet to find out, gsky works when these are deleted
+    # we just delete them for now as we research
+    del ds.x.attrs['axis']
+    del ds.x.attrs['long_name']
+    del ds.x.attrs['standard_name']
+    del ds.x.attrs['units']
+
+    del ds.y.attrs['axis']
+    del ds.y.attrs['long_name']
+    del ds.y.attrs['standard_name']
+    del ds.y.attrs['units']
+
     return ds
