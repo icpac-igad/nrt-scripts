@@ -57,6 +57,14 @@ DATA_FILES_CONFIG = {
         "volume_path": "RAINFALL/WEEKLY_EXCEPTIONAL",
         "prefix": "PrecExtreme",
         "interval": "weekly",
+    },
+    "weekly_temp_anom": {
+        "file_match": "TavgAnomaly.nc",
+        "variables": ["temp_anom"],
+        "gsky_path": "gdata/TEMPERATURE/WEEKLY_ANOMALY",
+        "volume_path": "TEMPERATURE/WEEKLY_ANOMALY",
+        "prefix": "TavgAnomaly",
+        "interval": "weekly",
     }
 }
 
