@@ -71,6 +71,9 @@ LOCAL_WEEKLY_DATA_PATH = f"/opt/{NAME}/input"
 GSKY_WEBHOOK_URL = os.getenv("GSKY_WEBHOOK_URL")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 
+FORECAST_WEBHOOK_URL = os.getenv("FORECAST_WEBHOOK_URL")
+FORECAST_WEBHOOK_SECRET = os.getenv("FORECAST_WEBHOOK_SECRET")
+
 
 def get_latest_date_for_dataset(gsky_path, namespace):
     res = requests.get(
@@ -85,6 +88,27 @@ def get_weekly_date_from_path(path):
     date_str = path[-8:]
     date = datetime.strptime(date_str, '%Y%m%d')
     return date, date_str
+
+
+def send_forecast_sync_command():
+    if FORECAST_WEBHOOK_URL and FORECAST_WEBHOOK_SECRET:
+        logging.info(f"[SYNC COMMAND]: Sending forecast sync command ")
+        payload = {"now": time.time()}
+        request = requests.Request(
+            'POST', f"{FORECAST_WEBHOOK_URL}",
+            data=payload, headers={})
+
+        prepped = request.prepare()
+        signature = hmac.new(codecs.encode(FORECAST_WEBHOOK_SECRET), codecs.encode(prepped.body),
+                             digestmod=hashlib.sha256)
+        prepped.headers['X-Icpac-Signature'] = signature.hexdigest()
+
+        with requests.Session() as session:
+            response = session.send(prepped)
+            logging.info(response.text)
+        return response
+    else:
+        return None
 
 
 def send_gsky_ingest_command():
@@ -107,6 +131,10 @@ def send_gsky_ingest_command():
 def main():
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     logging.info('STARTING')
+
+    if FORECAST_WEBHOOK_URL and FORECAST_WEBHOOK_SECRET:
+        logging.info('PULLING FORECAST DATA')
+        send_forecast_sync_command()
 
     folders = sorted(glob(f"{LOCAL_WEEKLY_DATA_PATH}/202?????"))
 

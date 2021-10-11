@@ -15,9 +15,6 @@ LOCAL_WEEKLY_DATA_IN_DIR=${LOCAL_WEEKLY_DATA_IN_DIR:-}
 # volume where processed data is saved
 LOCAL_WEEKLY_DATA_OUT_VOL=${LOCAL_WEEKLY_DATA_OUT_VOL:-}
 
-# perform rsync with remote
-#rsync -av -e "ssh -i $REMOTE_SSH_KEY_PATH" "$REMOTE_WEEKLY_DATA_DIR" "$LOCAL_WEEKLY_DATA_IN_DIR" --progress -h
-
 # build docker image
 docker build -t "$NAME" --build-arg NAME="$NAME" .
 
