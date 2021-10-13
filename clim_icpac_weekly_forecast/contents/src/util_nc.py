@@ -16,7 +16,7 @@ def clip_to_ea(ds, shp_path="shp/gha_admin0.shp"):
         ds = rxr.open_rasterio(ds, decode_times=False)
     else:
         # rename lon and lat to x and y
-        if ds.get("lon") and ds.get("lat"):
+        if ds.get("lon", None) is not None and ds.get("lat", None) is not None:
             ds = ds.rename({"lon": "x", "lat": "y"})
 
     # write crs
