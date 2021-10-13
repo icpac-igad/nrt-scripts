@@ -224,7 +224,8 @@ def main():
                                 if not os.path.exists(f"{volume_dir}"):
                                     os.makedirs(volume_dir)
 
-                                ds.to_netcdf(f"{volume_dir}/{derived_config.get('prefix')}_{date_str}.nc")
+                                ds.to_netcdf(f"{volume_dir}/{derived_config.get('prefix')}_{date_str}.nc",
+                                             {derived_config.get('variable'): {"_FillValue": -9999.0}})
 
                                 logging.info(f'Finished processing derived data for date {latest_gsky_week}')
 
