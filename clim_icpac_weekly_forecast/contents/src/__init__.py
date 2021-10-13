@@ -198,8 +198,6 @@ def main():
                         stats = derived_config.get('stats')
 
                         if stats and derived_config.get('prefix'):
-                            ds = xr.open_dataset(file_path, engine='netcdf4')
-
                             if stats == 'sum':
                                 ds = ds.sum(dim='time')
                             elif stats == 'mean':
@@ -207,10 +205,8 @@ def main():
                             else:
                                 raise NotImplementedError()
 
-                            if derived_config.get('is_multivariable') is None and derived_config.get('variable'):
+                            if derived_config.get('variable', None) is not None:
                                 ds = ds.rename({config.get('variable'): derived_config.get('variable')})
-
-                                ds = clip_to_ea(ds)
 
                                 if derived_config.get('interval') == 'weekly':
                                     t = np.datetime64(folder.get('date'))
