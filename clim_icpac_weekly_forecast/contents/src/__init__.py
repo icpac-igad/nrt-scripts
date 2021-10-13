@@ -11,6 +11,7 @@ from glob import glob
 import numpy as np
 import requests
 import xarray as xr
+import rioxarray as rxr
 
 from .util_nc import clip_to_ea
 
@@ -187,8 +188,6 @@ def main():
 
                     ds.to_netcdf(f"{volume_dir}/{config.get('prefix')}_{date_str}.nc")
 
-                    ds.close()
-
                     logging.info(f'Finished processing {layer} for date {latest_gsky_week}')
 
                     if config.get('derived'):
@@ -209,12 +208,15 @@ def main():
                                 # convert to dataset if DataArray
                                 if isinstance(ds, xr.DataArray):
                                     ds = ds.to_dataset()
-                                print(ds)
+
                                 ds = ds.rename({config.get('variable'): derived_config.get('variable')})
 
                                 if derived_config.get('interval') == 'weekly':
                                     t = np.datetime64(folder.get('date'))
                                     ds = ds.expand_dims(time=[t])
+
+                                # write crs
+                                ds = ds.rio.write_crs("epsg:4326", inplace=True)
 
                                 volume_dir = f"{DATA_DIR}/{derived_config.get('volume_path')}"
 
@@ -226,7 +228,7 @@ def main():
 
                                 logging.info(f'Finished processing derived data for date {latest_gsky_week}')
 
-                            ds.close()
+                    ds.close()
 
         logging.info(f'Finished processing')
 
