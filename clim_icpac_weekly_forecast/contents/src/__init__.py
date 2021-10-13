@@ -206,6 +206,8 @@ def main():
                                 raise NotImplementedError()
 
                             if derived_config.get('variable', None) is not None:
+                                print(ds)
+                                print(ds.data_vars)
                                 ds = ds.rename({config.get('variable'): derived_config.get('variable')})
 
                                 if derived_config.get('interval') == 'weekly':
