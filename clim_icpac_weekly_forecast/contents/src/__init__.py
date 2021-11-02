@@ -154,6 +154,7 @@ def db_import(config):
         signature = hmac.new(codecs.encode(WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
         prepped.headers['X-Icpac-Signature'] = signature.hexdigest()
 
+        logging.info(f'Sending Import to DB command')
         with requests.Session() as session:
             response = session.send(prepped)
 
@@ -239,6 +240,8 @@ def main():
                                 "variable": f"-v={variable}",
                                 "date": f"-d={full_date}"
                             }
+
+                            logging.info(f"importing with config: {db_import_config}")
 
                             db_import(db_import_config)
 
