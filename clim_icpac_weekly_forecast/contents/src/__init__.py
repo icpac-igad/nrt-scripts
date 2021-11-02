@@ -157,9 +157,7 @@ def db_import(config):
         logging.info(f'Sending Import to DB command')
         with requests.Session() as session:
             response = session.send(prepped)
-
-        return response
-    return None
+            logging.info(response.text)
 
 
 def main():
