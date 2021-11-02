@@ -58,6 +58,11 @@ DATA_FILES_CONFIG = {
         "volume_path": "RAINFALL/WEEKLY_EXCEPTIONAL",
         "prefix": "PrecExtreme",
         "interval": "weekly",
+        "db_import": {
+            "variable": "f90,f95,f99",
+            "product": "weekly_extreme_rain",
+            "host_base_dir": "/eahw/gskydata"
+        }
     },
     "weekly_temp_anom": {
         "file_match": "TavgAnomaly.nc",
@@ -137,6 +142,25 @@ def send_gsky_ingest_command():
             logging.info(response.text)
 
 
+def db_import(config):
+    if GSKY_WEBHOOK_URL and WEBHOOK_SECRET:
+        request = requests.Request(
+            'POST',
+            f"{GSKY_WEBHOOK_URL}/import-weekly-exceptional-rain",
+            data=config,
+            headers={})
+
+        prepped = request.prepare()
+        signature = hmac.new(codecs.encode(WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
+        prepped.headers['X-Icpac-Signature'] = signature.hexdigest()
+
+        with requests.Session() as session:
+            response = session.send(prepped)
+
+        return response
+    return None
+
+
 def main():
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     logging.info('STARTING')
@@ -189,6 +213,34 @@ def main():
                     ds.to_netcdf(f"{volume_dir}/{config.get('prefix')}_{date_str}.nc")
 
                     logging.info(f'Finished processing {layer} for date {latest_gsky_week}')
+
+                    if config.get("db_import"):
+                        logging.info(f'Importing to database: {layer}')
+
+                        volume_path = config.get("volume_path")
+                        d_config = config.get("db_import")
+
+                        variable = d_config.get("variable")
+                        product = d_config.get("product")
+                        host_base_dir = d_config.get("host_base_dir")
+
+                        if variable and product and host_base_dir:
+                            file_name = f"{config.get('prefix')}_{date_str}.nc"
+
+                            d_year = date_str[:4]
+                            d_month = date_str[4:6]
+                            d_day = date_str[6:]
+                            full_date = f"{d_year}-{d_month}-{d_day}"
+
+                            db_import_config = {
+                                "volume": f"{host_base_dir}/{volume_path}/{file_name}",
+                                "file": f"{file_name}",
+                                "product": f"-p={product}",
+                                "variable": f"-v={variable}",
+                                "date": f"-d={full_date}"
+                            }
+
+                            db_import(db_import_config)
 
                     if config.get('derived'):
                         logging.info(f'Processing derived data for date {latest_gsky_week}')
