@@ -83,10 +83,10 @@ DATA_DIR = f"/opt/{NAME}/data"
 LOCAL_WEEKLY_DATA_PATH = f"/opt/{NAME}/input"
 
 GSKY_WEBHOOK_URL = os.getenv("GSKY_WEBHOOK_URL")
-WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+GSKY_WEBHOOK_SECRET = os.getenv("GSKY_WEBHOOK_SECRET")
 
-FORECAST_WEBHOOK_URL = os.getenv("FORECAST_WEBHOOK_URL")
-FORECAST_WEBHOOK_SECRET = os.getenv("FORECAST_WEBHOOK_SECRET")
+EAHW_WEBHOOK_URL = os.getenv("EAHW_WEBHOOK_URL")
+EAHW_WEBHOOK_SECRET = os.getenv("EAHW_WEBHOOK_SECRET")
 
 
 def get_latest_date_for_dataset(gsky_path, namespace):
@@ -105,15 +105,15 @@ def get_weekly_date_from_path(path):
 
 
 def send_forecast_sync_command():
-    if FORECAST_WEBHOOK_URL and FORECAST_WEBHOOK_SECRET:
+    if EAHW_WEBHOOK_URL and EAHW_WEBHOOK_SECRET:
         logging.info(f"[SYNC COMMAND]: Sending forecast sync command ")
         payload = {"now": time.time()}
         request = requests.Request(
-            'POST', f"{FORECAST_WEBHOOK_URL}",
+            'POST', f"{EAHW_WEBHOOK_URL}/weekly-forecast-sync",
             data=payload, headers={})
 
         prepped = request.prepare()
-        signature = hmac.new(codecs.encode(FORECAST_WEBHOOK_SECRET), codecs.encode(prepped.body),
+        signature = hmac.new(codecs.encode(EAHW_WEBHOOK_SECRET), codecs.encode(prepped.body),
                              digestmod=hashlib.sha256)
         prepped.headers['X-Icpac-Signature'] = signature.hexdigest()
 
@@ -126,7 +126,7 @@ def send_forecast_sync_command():
 
 
 def send_gsky_ingest_command():
-    if GSKY_WEBHOOK_URL and WEBHOOK_SECRET:
+    if GSKY_WEBHOOK_URL and GSKY_WEBHOOK_SECRET:
         logging.info(f"[INGEST COMMAND]: Sending gsky ingest command ")
         payload = {"now": time.time()}
         request = requests.Request(
@@ -134,7 +134,7 @@ def send_gsky_ingest_command():
             data=payload, headers={})
 
         prepped = request.prepare()
-        signature = hmac.new(codecs.encode(WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
+        signature = hmac.new(codecs.encode(GSKY_WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
         prepped.headers['X-Gsky-Signature'] = signature.hexdigest()
 
         with requests.Session() as session:
@@ -143,15 +143,15 @@ def send_gsky_ingest_command():
 
 
 def db_import(config):
-    if GSKY_WEBHOOK_URL and WEBHOOK_SECRET:
+    if EAHW_WEBHOOK_URL and EAHW_WEBHOOK_SECRET:
         request = requests.Request(
             'POST',
-            f"{GSKY_WEBHOOK_URL}/import-weekly-exceptional-rain",
+            f"{EAHW_WEBHOOK_URL}/import-weekly-exceptional-rain",
             data=config,
             headers={})
 
         prepped = request.prepare()
-        signature = hmac.new(codecs.encode(WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
+        signature = hmac.new(codecs.encode(EAHW_WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
         prepped.headers['X-Icpac-Signature'] = signature.hexdigest()
 
         logging.info(f'Sending Import to DB command')
@@ -164,9 +164,8 @@ def main():
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     logging.info('STARTING')
 
-    if FORECAST_WEBHOOK_URL and FORECAST_WEBHOOK_SECRET:
-        logging.info('PULLING FORECAST DATA')
-        send_forecast_sync_command()
+    logging.info('SYNCING FORECAST DATA')
+    send_forecast_sync_command()
 
     folders = sorted(glob(f"{LOCAL_WEEKLY_DATA_PATH}/202?????"))
 
