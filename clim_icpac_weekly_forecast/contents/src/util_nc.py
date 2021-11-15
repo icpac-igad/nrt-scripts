@@ -15,10 +15,6 @@ def clip_to_ea(ds, shp_path="shp/gha_admin0.shp"):
         # we assume this is a data path, open it with rioxarray
         ds = rxr.open_rasterio(ds, decode_times=False)
 
-    # rename lon and lat to x and y
-    if ds.get("lon", None) is not None and ds.get("lat", None) is not None:
-        ds = ds.rename({"lon": "x", "lat": "y"})
-
     # write crs
     ds.rio.write_crs("epsg:4326", inplace=True)
 

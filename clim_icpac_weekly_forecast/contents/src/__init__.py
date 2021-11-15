@@ -194,13 +194,17 @@ def main():
                 file_path = f"{folder.get('dir')}/{config.get('file_match')}"
                 date_str = folder.get('date_str')
                 if os.path.exists(file_path):
+                    ds = xr.open_dataset(file_path)
+
+                    # rename lon and lat to x and y
+                    if ds.get("lon", None) is not None and ds.get("lat", None) is not None:
+                        ds = ds.rename({"lon": "x", "lat": "y"})
+
                     if config.get('interval') == 'weekly':
-                        ds = xr.open_dataset(file_path)
                         t = np.datetime64(folder.get('date'))
                         ds = ds.expand_dims(time=[t])
-                        ds = clip_to_ea(ds)
-                    else:
-                        ds = clip_to_ea(file_path)
+
+                    ds = clip_to_ea(ds)
 
                     volume_dir = f"{DATA_DIR}/{config.get('volume_path')}"
 
