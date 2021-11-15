@@ -14,13 +14,14 @@ def clip_to_ea(ds, shp_path="shp/gha_admin0.shp"):
     if not isinstance(ds, xr.Dataset):
         # we assume this is a data path, open it with rioxarray
         ds = rxr.open_rasterio(ds, decode_times=False)
-    else:
-        # rename lon and lat to x and y
-        if ds.get("lon", None) is not None and ds.get("lat", None) is not None:
-            ds = ds.rename({"lon": "x", "lat": "y"})
 
     # write crs
     ds.rio.write_crs("epsg:4326", inplace=True)
+
+    ds.spatial_ref.attrs[
+        'crs_wkt'] = "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Longitude\",EAST],AXIS[\"Latitude\",NORTH],AUTHORITY[\"EPSG\",\"4326\"]]"
+    ds.spatial_ref.attrs[
+        'spatial_ref'] = "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Longitude\",EAST],AXIS[\"Latitude\",NORTH],AUTHORITY[\"EPSG\",\"4326\"]]"
 
     # rioxarray has issues with assigning multiple units for multi-temporal data.
     # we only need one
@@ -49,5 +50,7 @@ def clip_to_ea(ds, shp_path="shp/gha_admin0.shp"):
         del ds.y.attrs['standard_name']
     if ds.y.attrs.get('units'):
         del ds.y.attrs['units']
+
+    return ds
 
     return ds

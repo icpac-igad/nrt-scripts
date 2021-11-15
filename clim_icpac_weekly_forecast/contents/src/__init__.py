@@ -208,7 +208,12 @@ def main():
                     if not os.path.exists(f"{volume_dir}"):
                         os.makedirs(volume_dir)
 
-                    ds.to_netcdf(f"{volume_dir}/{config.get('prefix')}_{date_str}.nc")
+                    out = f"{volume_dir}/{config.get('prefix')}_{date_str}.nc"
+
+                    # save to file
+                    ds.to_netcdf(out)
+
+                    ds.close()
 
                     logging.info(f'Finished processing {layer} for date {latest_gsky_week}')
 
@@ -249,38 +254,33 @@ def main():
                         stats = derived_config.get('stats')
 
                         if stats and derived_config.get('prefix'):
-                            if stats == 'sum':
-                                ds = ds.sum(dim='time')
-                            elif stats == 'mean':
-                                ds = ds.mean(dim='time')
-                            else:
-                                raise NotImplementedError()
+                            ds = create_derived(out, stats, "time")
 
-                            if derived_config.get('variable', None) is not None:
-                                # convert to dataset if DataArray
-                                if isinstance(ds, xr.DataArray):
-                                    ds = ds.to_dataset()
+                        if derived_config.get('variable', None) is not None:
+                            # convert to dataset if DataArray
+                            if isinstance(ds, xr.DataArray):
+                                ds = ds.to_dataset()
 
-                                ds = ds.rename({config.get('variable'): derived_config.get('variable')})
+                            ds = ds.rename({config.get('variable'): derived_config.get('variable')})
 
-                                if derived_config.get('interval') == 'weekly':
-                                    t = np.datetime64(folder.get('date'))
-                                    ds = ds.expand_dims(time=[t])
+                            if derived_config.get('interval') == 'weekly':
+                                t = np.datetime64(folder.get('date'))
+                                ds = ds.expand_dims(time=[t])
 
-                                # write crs
-                                ds = ds.rio.write_crs("epsg:4326", inplace=True)
+                            # clip again
+                            ds = clip_to_ea(ds)
 
-                                volume_dir = f"{DATA_DIR}/{derived_config.get('volume_path')}"
+                            volume_dir = f"{DATA_DIR}/{derived_config.get('volume_path')}"
 
-                                # make dir if does not exist
-                                if not os.path.exists(f"{volume_dir}"):
-                                    os.makedirs(volume_dir)
+                            # make dir if does not exist
+                            if not os.path.exists(f"{volume_dir}"):
+                                os.makedirs(volume_dir)
 
-                                ds.to_netcdf(f"{volume_dir}/{derived_config.get('prefix')}_{date_str}.nc",
-                                             encoding={derived_config.get('variable'): {"_FillValue": -9999.0,
-                                                                                        "grid_mapping": "spatial_ref"}})
+                            ds.to_netcdf(f"{volume_dir}/{derived_config.get('prefix')}_{date_str}.nc",
+                                         encoding={derived_config.get('variable'): {"_FillValue": -9999.0,
+                                                                                    "grid_mapping": "spatial_ref"}})
 
-                                logging.info(f'Finished processing derived data for date {latest_gsky_week}')
+                            logging.info(f'Finished processing derived data for date {latest_gsky_week}')
 
                     ds.close()
 
@@ -289,3 +289,18 @@ def main():
         if len(new_folders) > 0:
             logging.info(f'Sending Ingest command to GSKY')
             send_gsky_ingest_command()
+
+
+def create_derived(data_path, method, dimension):
+    with xr.open_dataset(data_path) as ds:
+        try:
+            if method == 'sum':
+                ds = ds.sum(dim=dimension)
+            elif method == 'mean':
+                ds = ds.mean(dim=dimension)
+            else:
+                # TODO: implement other computations
+                raise NotImplementedError()
+        except Exception as e:
+            raise e
+        return ds
