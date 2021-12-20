@@ -38,11 +38,11 @@ AOI_BBOX = [-12.5, 21, 24, 52]  # IGAD region
 EA_SHP_PATH = "shp/gha_admin0.shp"
 
 GSKY_WEBHOOK_URL = os.getenv("GSKY_WEBHOOK_URL")
-WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+GSKY_WEBHOOK_SECRET = os.getenv("GSKY_WEBHOOK_SECRET")
 
 
 def send_gsky_ingest_command():
-    if GSKY_WEBHOOK_URL and WEBHOOK_SECRET:
+    if GSKY_WEBHOOK_URL and GSKY_WEBHOOK_SECRET:
         logging.info(f"[INGEST COMMAND]: Sending gsky ingest command ")
         payload = {"now": time.time()}
         request = requests.Request(
@@ -50,7 +50,7 @@ def send_gsky_ingest_command():
             data=payload, headers={})
 
         prepped = request.prepare()
-        signature = hmac.new(codecs.encode(WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
+        signature = hmac.new(codecs.encode(GSKY_WEBHOOK_SECRET), codecs.encode(prepped.body), digestmod=hashlib.sha256)
         prepped.headers['X-Gsky-Signature'] = signature.hexdigest()
 
         with requests.Session() as session:
