@@ -189,10 +189,12 @@ def main():
         logging.info(f'Total number of folders with new data: {len(new_folders)}')
 
         for folder in new_folders:
-            logging.info(f'Processing data for date {latest_gsky_week}')
+            logging.info(f'Processing data for date {folder.get("date")}')
+            
             for layer, config in DATA_FILES_CONFIG.items():
                 file_path = f"{folder.get('dir')}/{config.get('file_match')}"
                 date_str = folder.get('date_str')
+
                 if os.path.exists(file_path):
                     ds = xr.open_dataset(file_path)
 
@@ -204,6 +206,7 @@ def main():
                         t = np.datetime64(folder.get('date'))
                         ds = ds.expand_dims(time=[t])
 
+                    logging.info(f'clipping file: {file_path}')
                     ds = clip_to_ea(ds)
 
                     volume_dir = f"{DATA_DIR}/{config.get('volume_path')}"
@@ -211,10 +214,11 @@ def main():
                     # make dir if does not exist
                     if not os.path.exists(f"{volume_dir}"):
                         os.makedirs(volume_dir)
-
+                    
                     out = f"{volume_dir}/{config.get('prefix')}_{date_str}.nc"
 
                     # save to file
+                    logging.info(f'saving file: {out}')
                     ds.to_netcdf(out)
 
                     ds.close()
@@ -287,6 +291,10 @@ def main():
                             logging.info(f'Finished processing derived data for date {latest_gsky_week}')
 
                     ds.close()
+
+                else:
+                    logging.warn(f'File not found {file_path}. No clipping done')
+                    
 
         logging.info(f'Finished processing')
 
