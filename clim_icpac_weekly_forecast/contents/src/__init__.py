@@ -61,7 +61,7 @@ DATA_FILES_CONFIG = {
         "db_import": {
             "variable": "f90,f95,f99",
             "product": "weekly_extreme_rain",
-            "host_base_dir": "/eahw/gskydata"
+            "host_base_dir": "/home/eahw/data/gskydata"
         }
     },
     "weekly_temp_anom": {
