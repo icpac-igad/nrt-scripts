@@ -189,8 +189,9 @@ def main():
         logging.info(f'Total number of folders with new data: {len(new_folders)}')
 
         for folder in new_folders:
-            logging.info(f'Processing data for date {folder.get("date")}')
-            
+            data_date = folder.get("date")
+            logging.info(f'Processing data for date {data_date}')
+
             for layer, config in DATA_FILES_CONFIG.items():
                 file_path = f"{folder.get('dir')}/{config.get('file_match')}"
                 date_str = folder.get('date_str')
@@ -223,7 +224,7 @@ def main():
 
                     ds.close()
 
-                    logging.info(f'Finished processing {layer} for date {latest_gsky_week}')
+                    logging.info(f'Finished processing {layer} for date {data_date}')
 
                     if config.get("db_import"):
                         logging.info(f'Importing to database: {layer}')
@@ -256,7 +257,7 @@ def main():
                             db_import(db_import_config)
 
                     if config.get('derived'):
-                        logging.info(f'Processing derived data for date {latest_gsky_week}')
+                        logging.info(f'Processing derived data for date {data_date}')
                         derived_config = config.get('derived')
 
                         stats = derived_config.get('stats')
@@ -288,7 +289,7 @@ def main():
                                          encoding={derived_config.get('variable'): {"_FillValue": -9999.0,
                                                                                     "grid_mapping": "spatial_ref"}})
 
-                            logging.info(f'Finished processing derived data for date {latest_gsky_week}')
+                            logging.info(f'Finished processing derived data for date {data_date}')
 
                     ds.close()
 

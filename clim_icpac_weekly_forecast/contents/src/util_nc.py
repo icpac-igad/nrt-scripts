@@ -52,5 +52,3 @@ def clip_to_ea(ds, shp_path="shp/gha_admin0.shp"):
         del ds.y.attrs['units']
 
     return ds
-
-    return ds
