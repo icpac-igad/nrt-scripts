@@ -181,10 +181,13 @@ def main():
         new_folders = []
 
         for folder in folders:
-            folder_date, date_str = get_weekly_date_from_path(folder)
+            try:
+                folder_date, date_str = get_weekly_date_from_path(folder)
 
-            if folder_date > latest_gsky_week:
-                new_folders.append({"date": folder_date, "dir": folder, 'date_str': date_str})
+                if folder_date > latest_gsky_week:
+                    new_folders.append({"date": folder_date, "dir": folder, 'date_str': date_str})
+            except Exception as e:
+                logging.warning(f'Error getting date from file: {e}')
 
         logging.info(f'Total number of folders with new data: {len(new_folders)}')
 
@@ -215,7 +218,7 @@ def main():
                     # make dir if does not exist
                     if not os.path.exists(f"{volume_dir}"):
                         os.makedirs(volume_dir)
-                    
+
                     out = f"{volume_dir}/{config.get('prefix')}_{date_str}.nc"
 
                     # save to file
@@ -295,7 +298,6 @@ def main():
 
                 else:
                     logging.warn(f'File not found {file_path}. No clipping done')
-                    
 
         logging.info(f'Finished processing')
 
